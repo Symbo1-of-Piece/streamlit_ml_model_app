@@ -6,3 +6,5 @@ logs/
 *.csv
 venv/
 env/
+*venv
+*env
