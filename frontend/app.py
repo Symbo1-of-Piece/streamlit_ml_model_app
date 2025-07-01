@@ -1,6 +1,7 @@
 import streamlit as st
-from model.model import ImageCaptioningModel
-from utils.photo_loader import load_image
+import requests
+from PIL import Image
+import io
 import time
 
 def main():
@@ -35,7 +36,7 @@ def main():
         }
         .caption {
             font-size: 1.6rem;  
-            background-color: #80e0a7;  /* Зеленовато-голубой фон */
+            background-color: #80e0a7;
             border-radius: 15px;  
             padding: 20px;
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);  
@@ -45,8 +46,8 @@ def main():
         }
         .caption-text {
             font-weight: bold;
-            font-size: 1.6rem;  /* Larger text for the "Description:" label */
-            color: #1e2a47;  /* Dark blue for the label */
+            font-size: 1.6rem;
+            color: #1e2a47;
         }
         .image-container {
             display: flex;
@@ -55,7 +56,7 @@ def main():
             align-items: center;
         }
         .gif-container {
-            max-width: 300px;  /* Control GIF width */
+            max-width: 300px;
             margin: auto;
         }
         </style>
@@ -63,12 +64,15 @@ def main():
         unsafe_allow_html=True
     )
 
-    st.title("🖼️ Image Captioning App")
+    st.title("🖼️ Image Captioning App (API Version)")
+
+    API_URL = "http://localhost:8000"
+    PREDICT_ENDPOINT = "/predict"
 
     uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
 
     if uploaded_file is not None:
-        image = load_image(uploaded_file)
+        image = Image.open(uploaded_file)
         image_width = image.width 
         image_height = image.height  
 
@@ -81,10 +85,25 @@ def main():
         text_placeholder = st.empty()
         text_placeholder.markdown("### Generating the image caption...")
 
-        # Generate the caption
+        # Отправка изображения в API
         with st.spinner('Please wait...'):
-            time.sleep(2) 
-            captions = captioning_model.predict_step([uploaded_file])
+            try:
+                files = {"file": uploaded_file.getvalue()}
+                response = requests.post(
+                    f"{API_URL}{PREDICT_ENDPOINT}",
+                    files=files
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    caption = result.get("description", "No description generated")
+                else:
+                    caption = f"API Error: {response.text}"
+                
+                time.sleep(1)  # Для плавности анимации
+
+            except Exception as e:
+                caption = f"Connection Error: {str(e)}"
 
         gif_placeholder.empty() 
         text_placeholder.empty() 
@@ -93,9 +112,7 @@ def main():
         st.image(image, caption="Uploaded Image", width=500)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        for caption in captions:
-            st.markdown(f'<div class="caption"><span class="caption-text">Description:</span> {caption}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="caption"><span class="caption-text">Description:</span> {caption}</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    captioning_model = ImageCaptioningModel()
     main()

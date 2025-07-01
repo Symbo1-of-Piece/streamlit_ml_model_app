@@ -6,7 +6,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from model.model import ImageCaptioningModel
-from config import MODEL_PATH, MAX_LENGTH, NUM_BEAMS
+from backend.config import MODEL_PATH, MAX_LENGTH, NUM_BEAMS
 import torch
 from PIL import Image
 

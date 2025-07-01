@@ -1,7 +1,7 @@
 from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
 import torch
 from PIL import Image
-from config import MODEL_PATH, MAX_LENGTH, NUM_BEAMS
+from backend.config import MODEL_PATH, MAX_LENGTH, NUM_BEAMS
 
 class ImageCaptioningModel:
     def __init__(self):
